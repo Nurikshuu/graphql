@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphQL Profile | Tomorrow School</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ========== LOGIN VIEW ========== -->
+    <div id="login-view" class="view active">
+      <div class="login-bg">
+        <div class="login-hexgrid" aria-hidden="true"></div>
+      </div>
+      <div class="login-container">
+        <div class="login-card">
+          <div class="login-brand">
+            <svg class="brand-logo" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="30,4 56,18 56,42 30,56 4,42 4,18" fill="none" stroke="#00d4ff" stroke-width="2.5"/>
+              <polygon points="30,14 46,23 46,41 30,50 14,41 14,23" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
+              <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+                fill="#00d4ff" font-size="14" font-weight="bold" font-family="monospace" letter-spacing="1">GQL</text>
+            </svg>
+            <h1>Tomorrow School</h1>
+            <p>Sign in to view your GraphQL profile</p>
+          </div>
+
+          <form id="login-form" novalidate autocomplete="on">
+            <div class="form-group">
+              <label for="credential">Username or Email</label>
+              <input type="text" id="credential" name="username" placeholder="username or email@example.com"
+                autocomplete="username" spellcheck="false" required />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <div class="password-wrap">
+                <input type="password" id="password" name="password" placeholder="••••••••••"
+                  autocomplete="current-password" required />
+                <button type="button" id="toggle-pwd" class="toggle-pwd" aria-label="Show password" tabindex="-1">
+                  <svg id="eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div id="login-error" class="error-banner hidden" role="alert" aria-live="polite">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span id="login-error-text"></span>
+            </div>
+
+            <button type="submit" class="btn-primary btn-login" id="login-btn">
+              <span class="btn-text">Sign In</span>
+              <svg class="btn-spinner hidden" viewBox="0 0 24 24" width="18" height="18">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+              </svg>
+            </button>
+          </form>
+
+          <p class="login-hint">Supports both <code>username</code> and <code>email@example.com</code></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PROFILE VIEW ========== -->
+    <div id="profile-view" class="view hidden">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-brand">
+          <svg viewBox="0 0 30 30" width="26" height="26">
+            <polygon points="15,2 27,8.5 27,21.5 15,28 3,21.5 3,8.5" fill="none" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <span>Tomorrow School</span>
+        </div>
+        <nav class="topbar-nav" role="navigation">
+          <button class="nav-btn active" data-tab="overview">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            Overview
+          </button>
+          <button class="nav-btn" data-tab="stats">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Statistics
+          </button>
+          <button class="nav-btn" data-tab="calculator">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/>
+              <line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/>
+            </svg>
+            Audit Calc
+          </button>
+          <button class="nav-btn" data-tab="advisor">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            XP Advisor
+          </button>
+        </nav>
+        <div class="topbar-right">
+          <div class="user-chip">
+            <div class="user-chip-avatar" id="chip-avatar">?</div>
+            <span id="chip-name">...</span>
+          </div>
+          <button class="btn-logout" id="logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="main-content" id="main-content">
+        <!-- Loading overlay -->
+        <div id="data-loader" class="loader-overlay" aria-live="polite">
+          <div class="loader-box">
+            <div class="loader-ring"></div>
+            <p>Loading your data from GraphQL…</p>
+          </div>
+        </div>
+
+        <!-- ===== OVERVIEW ===== -->
+        <section id="tab-overview" class="tab-panel active" aria-labelledby="nav-overview">
+          <div class="overview-grid">
+
+            <!-- Profile card -->
+            <div class="card profile-card">
+              <div class="profile-top">
+                <div class="big-avatar" id="ov-avatar">?</div>
+                <div class="profile-info">
+                  <h2 id="ov-login">—</h2>
+                  <span class="badge badge-campus" id="ov-campus">campus</span>
+                </div>
+              </div>
+              <div class="profile-stats-row">
+                <div class="pstat">
+                  <span class="pstat-val" id="ov-id">—</span>
+                  <span class="pstat-lbl">User ID</span>
+                </div>
+                <div class="pstat">
+                  <span class="pstat-val" id="ov-joined">—</span>
+                  <span class="pstat-lbl">Joined</span>
+                </div>
+                <div class="pstat">
+                  <span class="pstat-val" id="ov-projects">—</span>
+                  <span class="pstat-lbl">Projects</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- XP card -->
+            <div class="card xp-card">
+              <h3 class="card-title">⚡ XP Summary</h3>
+              <div class="xp-hero">
+                <span class="xp-big" id="ov-xp-total">0</span>
+                <span class="xp-unit">XP</span>
+              </div>
+              <div class="xp-rows">
+                <div class="xp-row"><span>Transactions</span><strong id="ov-xp-count">0</strong></div>
+                <div class="xp-row"><span>Average / project</span><strong id="ov-xp-avg">0</strong></div>
+                <div class="xp-row"><span>Largest project</span><strong id="ov-xp-max">0</strong></div>
+                <div class="xp-row highlight"><span>This month</span><strong id="ov-xp-month">0</strong></div>
+              </div>
+            </div>
+
+            <!-- Audit card -->
+            <div class="card audit-card">
+              <h3 class="card-title">🔍 Audit Ratio</h3>
+              <div class="audit-display">
+                <div class="gauge-wrap">
+                  <svg id="ov-gauge-svg" viewBox="0 0 200 120" width="200" height="120">
+                    <path d="M 20 110 A 80 80 0 0 1 180 110"
+                      fill="none" stroke="#1a1d2e" stroke-width="18" stroke-linecap="round"/>
+                    <path id="ov-gauge-arc" d="M 20 110 A 80 80 0 0 1 180 110"
+                      fill="none" stroke="#10b981" stroke-width="18" stroke-linecap="round"
+                      stroke-dasharray="251" stroke-dashoffset="125"/>
+                    <text id="ov-gauge-val" x="100" y="94" text-anchor="middle"
+                      fill="#e2e8f0" font-size="26" font-weight="bold" font-family="system-ui">—</text>
+                    <text x="100" y="110" text-anchor="middle" fill="#64748b" font-size="10">AUDIT RATIO</text>
+                  </svg>
+                </div>
+                <div class="audit-bars-wrap">
+                  <div class="abar-row">
+                    <div class="abar-meta">
+                      <span class="abar-lbl up">↑ Done</span>
+                      <span class="abar-val" id="ov-up">0 B</span>
+                    </div>
+                    <div class="abar-track"><div class="abar-fill up" id="abar-up" style="width:50%"></div></div>
+                  </div>
+                  <div class="abar-row">
+                    <div class="abar-meta">
+                      <span class="abar-lbl down">↓ Received</span>
+                      <span class="abar-val" id="ov-down">0 B</span>
+                    </div>
+                    <div class="abar-track"><div class="abar-fill down" id="abar-down" style="width:50%"></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="audit-msg" id="audit-msg"></div>
+            </div>
+
+            <!-- Recent activity -->
+            <div class="card activity-card">
+              <h3 class="card-title">🕐 Recent Activity</h3>
+              <div id="activity-list" class="activity-list">
+                <p class="placeholder-text">Loading…</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ===== STATISTICS ===== -->
+        <section id="tab-stats" class="tab-panel hidden" aria-labelledby="nav-stats">
+          <div class="charts-grid">
+
+            <!-- XP Timeline -->
+            <div class="card chart-card span-full">
+              <div class="chart-head">
+                <h3 class="card-title">📈 XP Progress Over Time</h3>
+                <div class="filter-row" id="timeline-filter">
+                  <button class="filter-btn active" data-days="0">All</button>
+                  <button class="filter-btn" data-days="180">6M</button>
+                  <button class="filter-btn" data-days="90">3M</button>
+                  <button class="filter-btn" data-days="30">1M</button>
+                </div>
+              </div>
+              <div class="chart-box" id="box-timeline">
+                <svg id="svg-timeline" class="chart-svg" preserveAspectRatio="none"></svg>
+              </div>
+            </div>
+
+            <!-- XP by project -->
+            <div class="card chart-card">
+              <h3 class="card-title">🏆 Top Projects by XP</h3>
+              <div class="chart-box" id="box-projects">
+                <svg id="svg-projects" class="chart-svg"></svg>
+              </div>
+            </div>
+
+            <!-- Pass/Fail -->
+            <div class="card chart-card">
+              <h3 class="card-title">✅ Results Distribution</h3>
+              <div class="chart-box" id="box-results">
+                <svg id="svg-results" class="chart-svg"></svg>
+              </div>
+            </div>
+
+            <!-- Skills radar -->
+            <div class="card chart-card">
+              <h3 class="card-title">🕸️ Skills Profile</h3>
+              <div class="chart-box" id="box-skills">
+                <svg id="svg-skills" class="chart-svg"></svg>
+              </div>
+            </div>
+
+            <!-- Monthly XP -->
+            <div class="card chart-card">
+              <h3 class="card-title">📅 Monthly XP</h3>
+              <div class="chart-box" id="box-monthly">
+                <svg id="svg-monthly" class="chart-svg"></svg>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ===== AUDIT CALCULATOR ===== -->
+        <section id="tab-calculator" class="tab-panel hidden" aria-labelledby="nav-calculator">
+          <div class="single-col">
+            <div class="card">
+              <h2 class="section-title">🧮 Audit Ratio Calculator</h2>
+              <p class="section-sub">Plan projects &amp; audits — see your future audit ratio in real time.</p>
+
+              <!-- Current state -->
+              <div class="state-bar" id="calc-state-bar">
+                <div class="state-cell">
+                  <span class="sc-lbl">Current Ratio</span>
+                  <span class="sc-val accent" id="calc-cur-ratio">—</span>
+                </div>
+                <div class="sc-divider"></div>
+                <div class="state-cell">
+                  <span class="sc-lbl">↑ Done</span>
+                  <span class="sc-val up" id="calc-cur-up">—</span>
+                </div>
+                <div class="sc-divider"></div>
+                <div class="state-cell">
+                  <span class="sc-lbl">↓ Received</span>
+                  <span class="sc-val down" id="calc-cur-down">—</span>
+                </div>
+              </div>
+
+              <!-- Add project form -->
+              <div class="form-block">
+                <h3>📁 Add Planned Project</h3>
+                <div class="form-grid-2">
+                  <div class="form-field">
+                    <label for="calc-name">Project name</label>
+                    <input type="text" id="calc-name" class="finput" placeholder="e.g., ascii-art" />
+                  </div>
+                  <div class="form-field">
+                    <label for="calc-xp">Project XP value</label>
+                    <input type="number" id="calc-xp" class="finput" placeholder="e.g., 1750" min="0" />
+                  </div>
+                  <div class="form-field span-full">
+                    <label for="calc-team">Team members <span class="hint-inline">(comma-separated usernames, leave empty if solo)</span></label>
+                    <input type="text" id="calc-team" class="finput" placeholder="e.g., alice, bob, carol" />
+                  </div>
+                  <div class="form-field">
+                    <label for="calc-give">Audits you'll give (XP total)</label>
+                    <input type="number" id="calc-give" class="finput" placeholder="e.g., 500" min="0" />
+                  </div>
+                  <div class="form-field">
+                    <label for="calc-recv">Audits you'll receive (XP total)</label>
+                    <input type="number" id="calc-recv" class="finput" placeholder="Auto-estimated" min="0" />
+                    <span class="field-hint">Leave empty → auto-estimated as project XP</span>
+                  </div>
+                </div>
+                <button class="btn-primary" id="calc-add-btn">+ Add to Plan</button>
+              </div>
+
+              <!-- Plan list -->
+              <div class="plan-block" id="plan-block">
+                <h3>📋 Your Plan <span class="badge-count" id="plan-badge">0</span></h3>
+                <div id="plan-list" class="plan-list">
+                  <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>No projects planned yet.</p>
+                    <p class="dim">Add a project above to start the simulation.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Projection -->
+              <div class="proj-block" id="proj-block">
+                <h3>🔮 Projected Results</h3>
+                <div class="proj-cards">
+                  <div class="proj-card up">
+                    <span class="pc-lbl">↑ Projected Done</span>
+                    <span class="pc-val" id="pj-up">—</span>
+                    <span class="pc-delta" id="pj-up-d"></span>
+                  </div>
+                  <div class="proj-card down">
+                    <span class="pc-lbl">↓ Projected Received</span>
+                    <span class="pc-val" id="pj-down">—</span>
+                    <span class="pc-delta" id="pj-down-d"></span>
+                  </div>
+                  <div class="proj-card ratio">
+                    <span class="pc-lbl">Projected Ratio</span>
+                    <span class="pc-val" id="pj-ratio">—</span>
+                    <span class="pc-delta" id="pj-ratio-d"></span>
+                  </div>
+                </div>
+
+                <!-- Gauge -->
+                <div class="gauge-big">
+                  <svg id="calc-gauge" viewBox="0 0 400 160" width="100%" height="160">
+                    <defs>
+                      <linearGradient id="calcGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#ef4444"/>
+                        <stop offset="33%" stop-color="#f59e0b"/>
+                        <stop offset="55%" stop-color="#10b981"/>
+                        <stop offset="100%" stop-color="#00d4ff"/>
+                      </linearGradient>
+                    </defs>
+                    <path d="M 40 140 A 160 160 0 0 1 360 140"
+                      fill="none" stroke="#1a1d2e" stroke-width="22" stroke-linecap="round"/>
+                    <path id="calc-gauge-fill" d="M 40 140 A 160 160 0 0 1 360 140"
+                      fill="none" stroke="url(#calcGradient)" stroke-width="22" stroke-linecap="round"
+                      stroke-dasharray="503" stroke-dashoffset="503"/>
+                    <line id="calc-needle" x1="200" y1="140" x2="200" y2="40"
+                      stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="200" cy="140" r="9" fill="#e2e8f0"/>
+                    <text x="35" y="155" fill="#64748b" font-size="12" font-family="system-ui">0</text>
+                    <text x="185" y="35" fill="#64748b" font-size="12" font-family="system-ui">1.0</text>
+                    <text x="355" y="155" fill="#64748b" font-size="12" font-family="system-ui">2+</text>
+                    <text id="calc-gauge-lbl" x="200" y="128" text-anchor="middle"
+                      fill="#00d4ff" font-size="28" font-weight="bold" font-family="system-ui">—</text>
+                  </svg>
+                </div>
+
+                <!-- Team analysis -->
+                <div id="team-analysis" class="team-analysis hidden"></div>
+
+                <button class="btn-secondary" id="calc-clear-btn">🗑 Clear Plan</button>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== XP ADVISOR ===== -->
+        <section id="tab-advisor" class="tab-panel hidden" aria-labelledby="nav-advisor">
+          <div class="single-col">
+            <div class="card">
+              <h2 class="section-title">🎯 XP Advisor</h2>
+              <p class="section-sub">Enter your goal — get personalized project recommendations and collaboration insights.</p>
+
+              <div class="advisor-form">
+                <div class="form-grid-2">
+                  <div class="form-field">
+                    <label for="adv-target">Target additional XP</label>
+                    <input type="number" id="adv-target" class="finput" placeholder="e.g., 50000" min="0" />
+                  </div>
+                  <div class="form-field">
+                    <label for="adv-max">Max projects (optional)</label>
+                    <input type="number" id="adv-max" class="finput" placeholder="No limit" min="1" />
+                  </div>
+                  <div class="form-field">
+                    <label for="adv-cat">Focus area</label>
+                    <select id="adv-cat" class="finput">
+                      <option value="any">Any category</option>
+                      <option value="div-01">Main curriculum (div-01)</option>
+                      <option value="piscine-go">Piscine Go</option>
+                      <option value="piscine-js">Piscine JS</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="adv-strategy">Strategy</label>
+                    <select id="adv-strategy" class="finput">
+                      <option value="high-xp">Highest XP first</option>
+                      <option value="balanced">Balanced mix</option>
+                      <option value="many-small">Many smaller projects</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn-primary" id="adv-gen-btn">Generate Recommendations</button>
+              </div>
+
+              <div id="adv-results" class="adv-results hidden">
+                <!-- Summary -->
+                <div class="adv-summary">
+                  <div class="adv-sc">
+                    <span class="adv-sc-lbl">Your XP</span>
+                    <span class="adv-sc-val" id="adv-cur-xp">0</span>
+                  </div>
+                  <div class="adv-sc accent">
+                    <span class="adv-sc-lbl">Goal XP</span>
+                    <span class="adv-sc-val" id="adv-goal-xp">0</span>
+                  </div>
+                  <div class="adv-sc">
+                    <span class="adv-sc-lbl">Projects needed</span>
+                    <span class="adv-sc-val" id="adv-cnt">0</span>
+                  </div>
+                  <div class="adv-sc">
+                    <span class="adv-sc-lbl">Est. audit impact</span>
+                    <span class="adv-sc-val" id="adv-audit">±0.00</span>
+                  </div>
+                </div>
+
+                <!-- Project list -->
+                <h3>📋 Recommended Projects</h3>
+                <div id="adv-proj-list" class="adv-proj-list"></div>
+
+                <!-- Progress chart -->
+                <h3>📈 XP Progression Forecast</h3>
+                <div class="chart-box">
+                  <svg id="svg-adv-progress" class="chart-svg"></svg>
+                </div>
+
+                <!-- Collaboration insights -->
+                <h3>👥 Collaboration Insights</h3>
+                <div id="adv-collab" class="adv-collab"></div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+  </div><!-- #app -->
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/calculator.js"></script>
+  <script src="js/recommender.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
