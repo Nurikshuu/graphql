@@ -1,18 +1,7 @@
-/**
- * calculator.js — Audit Ratio Calculator
- *
- * Lets the user:
- *  - See current totalUp / totalDown / ratio
- *  - Add planned projects with XP value + team members
- *  - Add planned audits they intend to give
- *  - See projected ratio in real time with an animated SVG gauge
- */
-
 const Calculator = (() => {
-  let _user   = null;   // { totalUp, totalDown, auditRatio }
-  let _plan   = [];     // planned items
+  let _user   = null;
+  let _plan   = [];
 
-  // ── Init ──────────────────────────────────────────────────────────
   function init(user) {
     _user = user;
     _plan = [];

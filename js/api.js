@@ -108,80 +108,14 @@ const API = (() => {
     return data.transaction ?? [];
   }
 
-
-  async function getAuditTransactions() {
-    const data = await query(`
-      {
-        transaction(
-          where: {
-            _or: [
-              { type: { _eq: "up" } }
-              { type: { _eq: "down" } }
-            ]
-          }
-          order_by: { createdAt: asc }
-        ) {
-          id
-          type
-          amount
-          createdAt
-          path
-        }
-      }
-    `);
-    return data.transaction ?? [];
-  }
-
-  async function getObject(id) {
-    const data = await query(
-      `
-      query GetObject($id: Int!) {
-        object(where: { id: { _eq: $id } }) {
-          id
-          name
-          type
-          attrs
-        }
-      }
-    `,
-      { id }
-    );
-    return data.object?.[0] ?? null;
-  }
-
-  async function getProgress() {
-    const data = await query(`
-      {
-        progress(
-          order_by: { updatedAt: desc }
-          limit: 100
-        ) {
-          id
-          objectId
-          grade
-          createdAt
-          updatedAt
-          path
-          object {
-            name
-            type
-          }
-        }
-      }
-    `);
-    return data.progress ?? [];
-  }
-
-
   async function fetchAll() {
-    const [user, xp, results, skills, progress] = await Promise.all([
+    const [user, xp, results, skills] = await Promise.all([
       getUser(),
       getXPTransactions(),
       getResults(),
       getSkills(),
-      getProgress(),
     ]);
-    return { user, xp, results, skills, progress };
+    return { user, xp, results, skills };
   }
 
   return {
@@ -190,9 +124,6 @@ const API = (() => {
     getXPTransactions,
     getResults,
     getSkills,
-    getAuditTransactions,
-    getObject,
-    getProgress,
     fetchAll,
   };
 })();

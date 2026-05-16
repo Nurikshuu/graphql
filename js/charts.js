@@ -55,7 +55,7 @@ const Charts = (() => {
     }));
   }
 
-  // ── Tooltip (HTML overlay) ─────────────────────────────────────────
+
   function makeTooltip() {
     let tip = document.querySelector('.chart-tooltip');
     if (!tip) {
@@ -84,10 +84,8 @@ const Charts = (() => {
 
     setSvgSize(svgEl, W, H);
 
-    // All sorted points
     const sorted = [...transactions].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-    // cumulative base before startDate
     let cumBase = 0;
     let all = sorted.map(t => ({ date: new Date(t.createdAt), amount: t.amount }));
     if (startDate) {
@@ -113,7 +111,6 @@ const Charts = (() => {
     const sx = d => PAD.left + (d.getTime() - minDate) / Math.max(maxDate - minDate, 1) * cw;
     const sy = v => PAD.top  + ch - (v - minXP) / Math.max(maxXP - minXP, 1) * ch;
 
-    // Defs (gradient)
     const defs = el('defs');
     const grad = el('linearGradient', { id: 'tlGrad', x1: '0', x2: '0', y1: '0', y2: '1' });
     const s1 = el('stop', { offset: '0%', 'stop-color': COLORS.accent, 'stop-opacity': '0.35' });
@@ -122,7 +119,6 @@ const Charts = (() => {
     defs.appendChild(grad);
     svgEl.appendChild(defs);
 
-    // Grid lines
     const gridG = el('g');
     const yStep = Math.ceil((maxXP - minXP) / 5 / 1000) * 1000 || 1;
     for (let v = Math.ceil(minXP / yStep) * yStep; v <= maxXP; v += yStep) {
@@ -225,12 +221,10 @@ const Charts = (() => {
         'text-anchor': 'end', fill: COLORS.text2, 'font-size': '12', 'font-family': 'system-ui',
       }));
 
-      // Value (right)
       barsG.appendChild(svgText(PAD.left + w + 6, y + BAR_H / 2 + 4, fmt(xp) + ' XP', {
         fill: COLORS.text, 'font-size': '11', 'font-family': 'system-ui', 'font-weight': '600',
       }));
 
-      // Tooltip
       const hitbox = el('rect', { x: PAD.left, y, width: bw, height: BAR_H, fill: 'transparent' });
       hitbox.addEventListener('mouseenter', e => showTip(tip, `<strong>${name}</strong><br>${xp.toLocaleString()} XP`, e.clientX, e.clientY));
       hitbox.addEventListener('mousemove',  e => showTip(tip, `<strong>${name}</strong><br>${xp.toLocaleString()} XP`, e.clientX, e.clientY));
@@ -258,13 +252,10 @@ const Charts = (() => {
     const CIRCUM  = 2 * Math.PI * R;
     const passArc = (pass / total) * CIRCUM;
     const failArc = CIRCUM - passArc;
-    // dashoffset rotates start point to top of circle
     const OFFSET = CIRCUM * 0.25;
 
-    // Background ring
     svgEl.appendChild(el('circle', { cx: CX, cy: CY, r: R, fill: 'none', stroke: COLORS.border, 'stroke-width': SW }));
 
-    // Pass arc (no animation — dashoffset must stay at OFFSET for correct positioning)
     svgEl.appendChild(el('circle', {
       cx: CX, cy: CY, r: R, fill: 'none',
       stroke: COLORS.up, 'stroke-width': SW,
@@ -313,7 +304,6 @@ const Charts = (() => {
     setSvgSize(svgEl, W, H);
 
     const skillMap = {};
-    // API returns skill_back-end, skill_front-end, skill_prog → map to chart axis names
     const ALIASES = { 'PROG': 'PROG-1', 'BACK-END': 'BACK', 'FRONT-END': 'FRONT' };
     skills.forEach(s => {
       let name = s.type.replace('skill_', '').toUpperCase();
@@ -323,7 +313,6 @@ const Charts = (() => {
 
     let entries;
     if (skillFilter) {
-      // Show ALL specified axes in the given order; use 0 for missing skills
       entries = skillFilter.map(name => [name, skillMap[name] || 0]);
     } else {
       entries = Object.entries(skillMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -336,7 +325,6 @@ const Charts = (() => {
     const n = entries.length;
     const maxVal = Math.max(...entries.map(e => e[1]), 1);
 
-    // Grid rings
     for (let ring = 1; ring <= 4; ring++) {
       const r = (ring / 4) * RADIUS;
       const pts = Array.from({ length: n }, (_, i) => {
@@ -346,7 +334,6 @@ const Charts = (() => {
       svgEl.appendChild(el('polygon', { points: pts, fill: 'none', stroke: COLORS.border, 'stroke-width': '1' }));
     }
 
-    // Spokes
     entries.forEach((_, i) => {
       const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
       svgEl.appendChild(el('line', {
@@ -357,7 +344,6 @@ const Charts = (() => {
       }));
     });
 
-    // Data polygon
     const dataPts = entries.map(([, val], i) => {
       const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
       const r = (val / maxVal) * RADIUS;
@@ -370,7 +356,6 @@ const Charts = (() => {
       'stroke-width': '2',
     }));
 
-    // Data dots
     entries.forEach(([, val], i) => {
       const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
       const r = (val / maxVal) * RADIUS;
@@ -381,7 +366,6 @@ const Charts = (() => {
       }));
     });
 
-    // Axis labels
     entries.forEach(([name, val], i) => {
       const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
       const lx = CX + (RADIUS + 22) * Math.cos(angle);
@@ -402,7 +386,6 @@ const Charts = (() => {
     if (!transactions?.length) { emptyMsg(svgEl, W, H); return; }
     setSvgSize(svgEl, W, H);
 
-    // Build map of actual XP per month
     const monthly = {};
     transactions.forEach(t => {
       const d = new Date(t.createdAt);
@@ -410,7 +393,6 @@ const Charts = (() => {
       monthly[key] = (monthly[key] || 0) + t.amount;
     });
 
-    // Fill every month between first and last (including empties)
     const keys = Object.keys(monthly).sort();
     const [fy, fm] = keys[0].split('-').map(Number);
     const now = new Date();
@@ -432,7 +414,6 @@ const Charts = (() => {
 
     const tip = makeTooltip();
 
-    // Y axis grid
     const yStep = Math.ceil(maxVal / 4 / 1000) * 1000 || 1;
     for (let v = yStep; v <= maxVal; v += yStep) {
       const yy = PAD.top + ch - (v / maxVal) * ch;
@@ -454,7 +435,6 @@ const Charts = (() => {
       }
 
       const [yr, mo] = key.split('-');
-      // Only show month label if bar is wide enough or every Nth bar
       const labelStep = Math.max(1, Math.ceil(entries.length / 24));
       if (i % labelStep === 0) {
         const moName = new Date(+yr, +mo - 1).toLocaleString('en', { month: 'short' });
@@ -501,7 +481,6 @@ const Charts = (() => {
     const sx = i => PAD.left + (i / (projectedPoints.length - 1)) * cw;
     const sy = v => PAD.top + ch - (v / maxXP) * ch;
 
-    // Area
     const areaD = `M ${sx(0)},${sy(currentXP)} ` +
       projectedPoints.map((p, i) => `L ${sx(i)},${sy(p.xp)}`).join(' ') +
       ` L ${sx(projectedPoints.length - 1)},${PAD.top + ch} L ${sx(0)},${PAD.top + ch} Z`;
@@ -517,7 +496,6 @@ const Charts = (() => {
 
     svgEl.appendChild(el('path', { d: areaD, fill: 'url(#fcastGrad)' }));
 
-    // Line
     const lineD = `M ${sx(0)},${sy(currentXP)} ` +
       projectedPoints.map((p, i) => `L ${sx(i)},${sy(p.xp)}`).join(' ');
     const lineEl = el('path', {
@@ -530,7 +508,6 @@ const Charts = (() => {
     lineEl.style.setProperty('--dash-total', len);
     svgEl.appendChild(lineEl);
 
-    // Labels
     projectedPoints.forEach((p, i) => {
       if (i === 0 || i === projectedPoints.length - 1 || i % Math.ceil(projectedPoints.length / 5) === 0) {
         svgEl.appendChild(el('circle', { cx: sx(i), cy: sy(p.xp), r: '4', fill: COLORS.accent2 }));
@@ -540,7 +517,6 @@ const Charts = (() => {
       }
     });
 
-    // X labels (project names)
     projectedPoints.forEach((p, i) => {
       if (i % Math.max(1, Math.floor(projectedPoints.length / 6)) === 0 || i === projectedPoints.length - 1) {
         const lbl = p.label || `+${i + 1}`;
@@ -553,7 +529,7 @@ const Charts = (() => {
     svgEl.appendChild(el('line', { x1: PAD.left, x2: W - PAD.right, y1: PAD.top + ch, y2: PAD.top + ch, stroke: COLORS.border, 'stroke-width': '1' }));
   }
 
-  // ── Update audit gauge (overview) ─────────────────────────────────
+
   function updateAuditGauge(svgEl, ratio) {
     const COLORS = getColors();
     const arc = svgEl.querySelector('#ov-gauge-arc');

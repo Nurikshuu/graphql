@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GraphQL Profile | Tomorrow School</title>
+  <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg" />
   <link rel="stylesheet" href="css/style.css" />
   <script>
     (function() {
@@ -15,7 +16,6 @@
 <body>
   <div id="app">
 
-    <!-- ========== LOGIN VIEW ========== -->
     <div id="login-view" class="view active">
       <div class="login-bg">
         <div class="login-hexgrid" aria-hidden="true"></div>
@@ -73,10 +73,8 @@
       </div>
     </div>
 
-    <!-- ========== PROFILE VIEW ========== -->
     <div id="profile-view" class="view hidden">
 
-      <!-- Topbar -->
       <header class="topbar">
         <div class="topbar-brand">
           <svg viewBox="0 0 30 30" width="26" height="26">
@@ -103,12 +101,10 @@
         </nav>
         <div class="topbar-right">
           <button class="btn-theme-toggle" id="theme-toggle" aria-label="Toggle light/dark theme">
-            <!-- Sun: click to switch to light mode -->
             <svg id="theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="5"/>
               <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
             </svg>
-            <!-- Moon: click to switch to dark mode -->
             <svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="hidden">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
@@ -121,9 +117,7 @@
         </div>
       </header>
 
-      <!-- Content -->
       <main class="main-content" id="main-content">
-        <!-- Loading overlay -->
         <div id="data-loader" class="loader-overlay" aria-live="polite">
           <div class="loader-box">
             <div class="loader-ring"></div>
@@ -131,11 +125,9 @@
           </div>
         </div>
 
-        <!-- ===== OVERVIEW ===== -->
         <section id="tab-overview" class="tab-panel active" aria-labelledby="nav-overview">
           <div class="overview-grid">
 
-            <!-- Profile card -->
             <div class="card profile-card">
               <div class="profile-top">
                 <div class="big-avatar" id="ov-avatar">?</div>
@@ -166,7 +158,6 @@
               </div>
             </div>
 
-            <!-- XP card -->
             <div class="card xp-card">
               <h3 class="card-title">XP Summary</h3>
               <div class="xp-hero">
@@ -181,7 +172,6 @@
               </div>
             </div>
 
-            <!-- Audit card -->
             <div class="card audit-card">
               <h3 class="card-title">Audit Ratio</h3>
               <div class="audit-display">
@@ -217,7 +207,6 @@
               <div class="audit-msg" id="audit-msg"></div>
             </div>
 
-            <!-- Recent activity -->
             <div class="card activity-card">
               <h3 class="card-title">Recent Activity</h3>
               <div id="activity-list" class="activity-list">
@@ -228,11 +217,9 @@
           </div>
         </section>
 
-        <!-- ===== STATISTICS ===== -->
         <section id="tab-stats" class="tab-panel hidden" aria-labelledby="nav-stats">
           <div class="charts-grid">
 
-            <!-- XP Timeline -->
             <div class="card chart-card span-full">
               <div class="chart-head">
                 <h3 class="card-title">XP Progress Over Time</h3>
@@ -263,7 +250,6 @@
               </div>
             </div>
 
-            <!-- XP by project -->
             <div class="card chart-card">
               <h3 class="card-title">Top Projects by XP</h3>
               <div class="chart-box" id="box-projects">
@@ -271,7 +257,6 @@
               </div>
             </div>
 
-            <!-- Pass/Fail -->
             <div class="card chart-card">
               <h3 class="card-title">Results Distribution</h3>
               <div class="chart-box" id="box-results">
@@ -279,7 +264,6 @@
               </div>
             </div>
 
-            <!-- Skills radar -->
             <div class="card chart-card">
               <h3 class="card-title">Technical Skills</h3>
               <div class="chart-box" id="box-skills">
@@ -294,7 +278,6 @@
               </div>
             </div>
 
-            <!-- Monthly XP -->
             <div class="card chart-card span-full">
               <h3 class="card-title">Monthly XP</h3>
               <div class="chart-box" id="box-monthly">
@@ -310,7 +293,7 @@
       </main>
     </div>
 
-  </div><!-- #app -->
+  </div>
 
   <div id="monthly-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-month-title">
     <div class="modal-box">

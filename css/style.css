@@ -1,9 +1,3 @@
-/* ===================================================================
-   TOMORROW SCHOOL — GraphQL Profile
-   Dark theme CSS
-   =================================================================== */
-
-/* ── Variables ──────────────────────────────────────────────────── */
 :root {
   --bg:         #0d0f1a;
   --bg2:        #13162a;
@@ -24,7 +18,6 @@
   --trans:      .2s ease;
 }
 
-/* ── Reset ──────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }
 body {
@@ -41,7 +34,6 @@ input, select { font-family: inherit; }
 code { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: .875em; }
 svg { display: block; }
 
-/* ── Animations ─────────────────────────────────────────────────── */
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
@@ -49,16 +41,12 @@ svg { display: block; }
 @keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
-/* ── Utility ────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
 .dim { opacity: .55; }
 .accent { color: var(--accent); }
 .up { color: var(--up); }
 .down { color: var(--down); }
 
-/* ===================================================================
-   LOGIN VIEW
-   =================================================================== */
 #login-view {
   min-height: 100vh;
   display: flex;
@@ -68,7 +56,6 @@ svg { display: block; }
   overflow: hidden;
 }
 
-/* Animated hex background */
 .login-bg {
   position: absolute; inset: 0;
   background: radial-gradient(ellipse at 30% 50%, rgba(0,212,255,.06) 0%, transparent 60%),
@@ -116,7 +103,6 @@ svg { display: block; }
 }
 .login-brand p { color: var(--text2); font-size: .9rem; }
 
-/* Login form */
 .form-group { margin-bottom: 1.25rem; }
 .form-group label {
   display: block;
@@ -201,9 +187,6 @@ svg { display: block; }
   color: var(--accent);
 }
 
-/* ===================================================================
-   TOPBAR
-   =================================================================== */
 .topbar {
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; gap: 1rem;
@@ -286,9 +269,6 @@ svg { display: block; }
 }
 .btn-theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ===================================================================
-   MAIN CONTENT / LOADER
-   =================================================================== */
 .main-content {
   max-width: 1280px;
   margin: 0 auto;
@@ -315,15 +295,9 @@ svg { display: block; }
   animation: spin 1s linear infinite;
 }
 
-/* ===================================================================
-   TAB PANELS
-   =================================================================== */
 .tab-panel { animation: fadeIn .3s ease; }
 .tab-panel.hidden { display: none; }
 
-/* ===================================================================
-   CARDS
-   =================================================================== */
 .card {
   background: var(--card);
   border: 1px solid var(--card-border);
@@ -338,9 +312,6 @@ svg { display: block; }
   display: flex; align-items: center; gap: .4rem;
 }
 
-/* ===================================================================
-   OVERVIEW GRID
-   =================================================================== */
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -349,7 +320,6 @@ svg { display: block; }
 }
 @media (max-width: 900px) { .overview-grid { grid-template-columns: 1fr; } }
 
-/* Profile card */
 .profile-card { grid-column: 1; }
 .profile-top {
   display: flex; align-items: center; gap: 1.25rem;
@@ -404,7 +374,6 @@ svg { display: block; }
 .pstat-val { display: block; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
 .pstat-lbl { display: block; font-size: .75rem; color: var(--text2); margin-top: .1rem; }
 
-/* XP card */
 .xp-card { grid-column: 2; }
 .xp-hero {
   display: flex; align-items: baseline; gap: .5rem;
@@ -428,7 +397,6 @@ svg { display: block; }
 .xp-row.highlight { border-left: 3px solid var(--accent); }
 .xp-row.highlight strong { color: var(--accent); }
 
-/* Audit card */
 .audit-card { grid-column: 1; }
 .audit-display { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
 .gauge-wrap { flex-shrink: 0; }
@@ -452,7 +420,6 @@ svg { display: block; }
 .audit-msg.good { color: var(--up); }
 .audit-msg.bad { color: var(--down); }
 
-/* Activity card */
 .activity-card { grid-column: 2; }
 .activity-list { display: flex; flex-direction: column; gap: .5rem; max-height: 320px; overflow-y: auto; }
 .activity-item {
@@ -471,9 +438,6 @@ svg { display: block; }
 .activity-xp { font-size: .85rem; font-weight: 700; color: var(--up); flex-shrink: 0; }
 .placeholder-text { color: var(--text3); font-size: .875rem; text-align: center; padding: 2rem; }
 
-/* ===================================================================
-   STATS GRID
-   =================================================================== */
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -515,14 +479,10 @@ svg { display: block; }
 }
 .chart-svg { width: 100%; height: 100%; overflow: visible; }
 
-/* ===================================================================
-   SINGLE COLUMN LAYOUT (calculator / advisor)
-   =================================================================== */
 .single-col { max-width: 860px; margin: 0 auto; }
 .section-title { font-size: 1.4rem; font-weight: 700; margin-bottom: .4rem; }
 .section-sub { color: var(--text2); font-size: .9rem; margin-bottom: 1.75rem; }
 
-/* State bar */
 .state-bar {
   display: flex; align-items: center; gap: 0;
   background: var(--bg2);
@@ -539,7 +499,6 @@ svg { display: block; }
 .sc-val.up { color: var(--up); }
 .sc-val.down { color: var(--down); }
 
-/* Form blocks */
 .form-block, .plan-block, .proj-block {
   margin-bottom: 2rem;
   padding-top: 1.5rem;
@@ -586,7 +545,6 @@ select.finput { appearance: none; cursor: pointer; }
 }
 .btn-secondary:hover { border-color: var(--down); color: var(--down); }
 
-/* Badge count */
 .badge-count {
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--accent); color: #000;
@@ -595,7 +553,6 @@ select.finput { appearance: none; cursor: pointer; }
   margin-left: .5rem;
 }
 
-/* Plan list */
 .plan-list { display: flex; flex-direction: column; gap: .6rem; }
 .plan-item {
   display: flex; align-items: center; gap: .75rem;
@@ -615,14 +572,12 @@ select.finput { appearance: none; cursor: pointer; }
 }
 .plan-item-del:hover { color: var(--down); }
 
-/* Empty state */
 .empty-state {
   text-align: center; padding: 2.5rem 1rem;
   color: var(--text3);
 }
 .empty-icon { font-size: 2.5rem; margin-bottom: .75rem; }
 
-/* Projection cards */
 .proj-cards {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
   margin-bottom: 1.5rem;
@@ -644,7 +599,6 @@ select.finput { appearance: none; cursor: pointer; }
 
 .gauge-big { margin-bottom: 1.5rem; }
 
-/* Team analysis */
 .team-analysis {
   background: var(--bg2);
   border: 1px solid var(--card-border);
@@ -665,9 +619,6 @@ select.finput { appearance: none; cursor: pointer; }
   font-size: .7rem; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 
-/* ===================================================================
-   XP ADVISOR
-   =================================================================== */
 .advisor-form { margin-bottom: 2rem; }
 .adv-results { margin-top: 1.5rem; }
 .adv-results h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 .75rem; }
@@ -716,17 +667,11 @@ select.finput { appearance: none; cursor: pointer; }
   .topbar-nav { display: none; }
 }
 
-/* ===================================================================
-   SCROLLBAR
-   =================================================================== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
 
-/* ===================================================================
-   SVG chart tooltips
-   =================================================================== */
 .chart-tooltip {
   position: absolute;
   background: var(--card);
@@ -741,9 +686,6 @@ select.finput { appearance: none; cursor: pointer; }
   transition: opacity var(--trans);
 }
 
-/* ===================================================================
-   MONTHLY MODAL
-   =================================================================== */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(13,15,26,.75);
@@ -791,9 +733,6 @@ select.finput { appearance: none; cursor: pointer; }
 .mprow-name { color: var(--text2); }
 .mprow-xp { font-weight: 700; color: var(--up); }
 
-/* ===================================================================
-   CHECKBOX LABEL
-   =================================================================== */
 .checkbox-label {
   display: flex; align-items: center; gap: .5rem;
   font-size: .83rem; color: var(--text2); cursor: pointer;
@@ -802,9 +741,6 @@ select.finput { appearance: none; cursor: pointer; }
   accent-color: var(--accent); width: 15px; height: 15px;
 }
 
-/* ===================================================================
-   LIGHT THEME
-   =================================================================== */
 [data-theme="light"] {
   --bg:         #f8fafc;
   --bg2:        #f1f5f9;

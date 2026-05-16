@@ -1,17 +1,10 @@
-/**
- * auth.js — Authentication module
- * Handles login (Basic → JWT), logout, token storage, JWT parsing
- */
-
 const Auth = (() => {
   const SIGNIN_URL = 'https://01.tomorrow-school.ai/api/auth/signin';
   const TOKEN_KEY  = 'ts_jwt';
 
-  // ── Login ─────────────────────────────────────────────────────────
   async function login(credential, password) {
     if (!credential || !password) throw new Error('Please enter your username/email and password.');
 
-    // Basic auth with base64-encoded "credential:password"
     const encoded = btoa(unescape(encodeURIComponent(`${credential}:${password}`)));
 
     let response;
@@ -34,7 +27,6 @@ const Auth = (() => {
       throw new Error(`Login failed (HTTP ${response.status}). Please try again.`);
     }
 
-    // The token may be returned as a bare string or wrapped in JSON
     const raw = await response.text();
     let token;
     try {
@@ -43,7 +35,7 @@ const Auth = (() => {
         ? parsed
         : parsed.token || parsed.jwt || parsed.access_token || parsed.data?.token;
     } catch {
-      token = raw.trim().replace(/^"|"$/g, ''); // bare string
+      token = raw.trim().replace(/^"|"$/g, '');
     }
 
     if (!token || token.split('.').length !== 3) {
@@ -54,12 +46,10 @@ const Auth = (() => {
     return token;
   }
 
-  // ── Logout ────────────────────────────────────────────────────────
   function logout() {
     localStorage.removeItem(TOKEN_KEY);
   }
 
-  // ── Token helpers ─────────────────────────────────────────────────
   function getToken() {
     return localStorage.getItem(TOKEN_KEY);
   }
@@ -69,7 +59,7 @@ const Auth = (() => {
     if (!token) return false;
     try {
       const { exp } = parsePayload(token);
-      return exp ? exp * 1000 > Date.now() : true; // if no exp, assume valid
+      return exp ? exp * 1000 > Date.now() : true;
     } catch {
       return false;
     }
@@ -85,10 +75,6 @@ const Auth = (() => {
     return JSON.parse(json);
   }
 
-  /**
-   * Returns the authenticated user's numeric ID.
-   * Hasura stores it under the custom claims or as "sub".
-   */
   function getUserId() {
     const token = getToken();
     if (!token) return null;

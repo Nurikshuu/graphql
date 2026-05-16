@@ -99,9 +99,8 @@
     main.prepend(div);
   }
 
-  function _populateOverview({ user, xp, results, skills }) {
+  function _populateOverview({ user, xp, results }) {
     if (!user) return;
-
 
     document.getElementById('chip-avatar').textContent = (user.login || '?')[0].toUpperCase();
     document.getElementById('chip-name').textContent   = user.login || 'User';
@@ -161,7 +160,6 @@
       msgEl.textContent = `❌ Ratio below 0.5 — prioritise giving audits before submitting new projects.`;
     }
 
-    // Recent activity
     _renderActivity(_filterModuleXP(xp), moduleResults);
   }
 
@@ -184,7 +182,6 @@
 
     events.sort((a, b) => b.date - a.date);
 
-    // Deduplicate: one entry per project name, keep first (most recent)
     const seen = new Set();
     const deduped = [];
     for (const ev of events) {
@@ -224,7 +221,6 @@
     const moduleResults = _filterModuleResults(results);
     _drawAllCharts(moduleXP, moduleResults, skills);
 
-    // Populate year dropdowns from data
     const years = [...new Set(moduleXP.map(t => new Date(t.createdAt).getFullYear()))].sort();
     const yearOpts = '<option value="">Year</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
     document.getElementById('timeline-from-year').innerHTML = yearOpts;
@@ -317,7 +313,7 @@
       });
     }
 
-    // ── Theme toggle ──────────────────────────────────────────────
+
     const themeBtn  = document.getElementById('theme-toggle');
     const iconSun   = document.getElementById('theme-icon-sun');
     const iconMoon  = document.getElementById('theme-icon-moon');
@@ -388,25 +384,14 @@
     });
     const map = new Map();
     for (const r of filtered) {
-      // Keep one entry per (path, pass/fail bucket): best grade among passes, worst among fails
-      // This preserves "project was failed then passed" as 1 pass + 1 fail entry
       const bucket = r.grade >= 1 ? 'pass' : 'fail';
       const key = `${r.path}__${bucket}`;
       const existing = map.get(key);
-      if (!existing) {
+      if (!existing || r.grade > existing.grade) {
         map.set(key, r);
-      } else if (bucket === 'pass' && r.grade > existing.grade) {
-        map.set(key, r); // keep best pass
-      } else if (bucket === 'fail' && r.grade > existing.grade) {
-        map.set(key, r); // keep highest fail grade (closest to passing)
       }
     }
     return Array.from(map.values());
-  }
-
-  function _isBaselinePath(path) {
-    const value = String(path || '').toLowerCase();
-    return value.includes('piscine') || value.includes('baseline');
   }
 
   function _esc(str) {
