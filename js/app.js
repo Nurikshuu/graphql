@@ -312,31 +312,6 @@
         if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
       });
     }
-
-
-    const themeBtn  = document.getElementById('theme-toggle');
-    const iconSun   = document.getElementById('theme-icon-sun');
-    const iconMoon  = document.getElementById('theme-icon-moon');
-
-    function _syncThemeIcon() {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      iconSun.classList.toggle('hidden', isLight);
-      iconMoon.classList.toggle('hidden', !isLight);
-    }
-    _syncThemeIcon();
-
-    themeBtn.addEventListener('click', () => {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      const next = isLight ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('ts_theme', next);
-      _syncThemeIcon();
-      if (_data) {
-        const moduleXP      = _filterModuleXP(_data.xp);
-        const moduleResults = _filterModuleResults(_data.results);
-        setTimeout(() => _drawAllCharts(moduleXP, moduleResults, _data.skills), 50);
-      }
-    });
   });
 
   document.querySelectorAll('.nav-btn').forEach(btn => {
