@@ -20,18 +20,30 @@ const Calculator = (() => {
     _bindEvents();
   }
 
-  // ── Bind UI events ────────────────────────────────────────────────
   function _bindEvents() {
     document.getElementById('calc-add-btn').onclick = _addItem;
     document.getElementById('calc-clear-btn').onclick = _clearPlan;
+
+    const nameInput = document.getElementById('calc-name');
+    if (nameInput) {
+      nameInput.addEventListener('input', e => {
+        const name = e.target.value.trim();
+        const xp = _projectXPMap[name];
+        if (xp) {
+          const xpInput = document.getElementById('calc-xp');
+          if (!xpInput.value) xpInput.value = xp;
+        }
+      });
+    }
   }
 
   function _addItem() {
-    const name    = document.getElementById('calc-name').value.trim();
-    const xp      = parseFloat(document.getElementById('calc-xp').value)   || 0;
-    const teamRaw = document.getElementById('calc-team').value.trim();
-    const give    = parseFloat(document.getElementById('calc-give').value)  || 0;
-    const recv    = parseFloat(document.getElementById('calc-recv').value);
+    const name         = document.getElementById('calc-name').value.trim();
+    const xp           = parseFloat(document.getElementById('calc-xp').value)  || 0;
+    const teamRaw      = document.getElementById('calc-team').value.trim();
+    const give         = parseFloat(document.getElementById('calc-give').value) || 0;
+    const recv         = parseFloat(document.getElementById('calc-recv').value);
+    const newTeammates = document.getElementById('calc-new-teammates')?.checked || false;
 
     if (xp <= 0 && give <= 0) {
       alert('Please enter a project XP value or the audits you plan to give.');
@@ -42,22 +54,23 @@ const Calculator = (() => {
       ? teamRaw.split(',').map(s => s.trim()).filter(Boolean)
       : [];
 
-    // Estimated audit received = project XP if not specified
     const auditReceived = isNaN(recv) ? xp : recv;
 
     _plan.push({
-      id:      Date.now(),
-      name:    name || `Project #${_plan.length + 1}`,
+      id:            Date.now(),
+      name:          name || `Project #${_plan.length + 1}`,
       xp,
       teamMembers,
+      newTeammates,
       give,
       auditReceived,
     });
 
-    // Clear inputs
     ['calc-name', 'calc-xp', 'calc-team', 'calc-give', 'calc-recv'].forEach(id => {
       document.getElementById(id).value = '';
     });
+    const cb = document.getElementById('calc-new-teammates');
+    if (cb) cb.checked = false;
 
     _render();
   }
@@ -72,7 +85,6 @@ const Calculator = (() => {
     _render();
   }
 
-  // ── Compute projections ───────────────────────────────────────────
   function _compute() {
     if (!_user) return null;
     let projUp   = _user.totalUp;
@@ -81,22 +93,22 @@ const Calculator = (() => {
     _plan.forEach(item => {
       projUp   += item.give;
       projDown += item.auditReceived;
+      if (item.newTeammates && item.teamMembers.length > 0) {
+        projUp += item.xp * 0.15 * item.teamMembers.length;
+      }
     });
 
     const projRatio = projDown > 0 ? projUp / projDown : 0;
     return { projUp, projDown, projRatio };
   }
 
-  // ── Render ────────────────────────────────────────────────────────
   function _render() {
     if (!_user) return;
 
-    // Current state bar
     document.getElementById('calc-cur-ratio').textContent = (_user.auditRatio || 0).toFixed(2);
     document.getElementById('calc-cur-up').textContent    = _fmtBytes(_user.totalUp);
     document.getElementById('calc-cur-down').textContent  = _fmtBytes(_user.totalDown);
 
-    // Plan list
     const list  = document.getElementById('plan-list');
     const badge = document.getElementById('plan-badge');
     badge.textContent = _plan.length;
@@ -104,7 +116,7 @@ const Calculator = (() => {
     if (_plan.length === 0) {
       list.innerHTML = `
         <div class="empty-state">
-          <div class="empty-icon">📭</div>
+
           <p>No projects planned yet.</p>
           <p class="dim">Add a project above to start the simulation.</p>
         </div>`;
@@ -114,13 +126,14 @@ const Calculator = (() => {
           <div class="plan-item-info">
             <div class="plan-item-name">${_esc(item.name)}</div>
             <div class="plan-item-meta">
-              ${item.xp > 0 ? `XP: ${item.xp.toLocaleString()}` : ''}
-              ${item.give > 0 ? ` · Give: ${item.give.toLocaleString()} XP` : ''}
-              ${item.auditReceived > 0 ? ` · Receive: ${item.auditReceived.toLocaleString()} XP` : ''}
-              ${item.teamMembers.length > 0 ? ` · 👥 ${item.teamMembers.join(', ')}` : ''}
+              ${item.xp > 0 ? `XP: ${_fmtBytes(item.xp)}` : ''}
+              ${item.give > 0 ? ` · Give: ${_fmtBytes(item.give)}` : ''}
+              ${item.auditReceived > 0 ? ` · Receive: ${_fmtBytes(item.auditReceived)}` : ''}
+              ${item.teamMembers.length > 0 ? ` · Team: ${item.teamMembers.join(', ')}` : ''}
+              ${item.newTeammates && item.teamMembers.length > 0 ? ' · <span style="color:var(--up)">+peer bonus</span>' : ''}
             </div>
           </div>
-          <span class="plan-item-xp">+${Charts.fmt(item.xp)} XP</span>
+          <span class="plan-item-xp">+${Charts.fmt(item.xp)}</span>
           <button class="plan-item-del" data-id="${item.id}" title="Remove">✕</button>
         </div>`).join('');
 
@@ -129,7 +142,6 @@ const Calculator = (() => {
       });
     }
 
-    // Projections
     const proj = _compute();
     if (!proj) return;
 
@@ -140,20 +152,16 @@ const Calculator = (() => {
     document.getElementById('pj-down').textContent  = _fmtBytes(projDown);
     document.getElementById('pj-ratio').textContent = projRatio.toFixed(2);
 
-    // Deltas
-    const deltaUp    = projUp   - _user.totalUp;
-    const deltaDown  = projDown - _user.totalDown;
+    const deltaUp    = projUp    - _user.totalUp;
+    const deltaDown  = projDown  - _user.totalDown;
     const deltaRatio = projRatio - curRatio;
 
-    document.getElementById('pj-up-d').textContent    = deltaUp    > 0 ? `+${_fmtBytes(deltaUp)}`           : '';
-    document.getElementById('pj-down-d').textContent  = deltaDown  > 0 ? `+${_fmtBytes(deltaDown)}`         : '';
+    document.getElementById('pj-up-d').textContent    = deltaUp    > 0 ? `+${_fmtBytes(deltaUp)}`   : '';
+    document.getElementById('pj-down-d').textContent  = deltaDown  > 0 ? `+${_fmtBytes(deltaDown)}` : '';
     document.getElementById('pj-ratio-d').textContent = deltaRatio !== 0 ? `${deltaRatio > 0 ? '+' : ''}${deltaRatio.toFixed(2)}` : '';
     document.getElementById('pj-ratio-d').style.color = deltaRatio >= 0 ? 'var(--up)' : 'var(--down)';
 
-    // Update gauge
     _updateGauge(projRatio);
-
-    // Team analysis
     _renderTeamAnalysis();
   }
 
@@ -167,16 +175,13 @@ const Calculator = (() => {
 
     if (!fill || !needle || !lbl) return;
 
-    // Half-circle arc length ≈ π × 160 ≈ 503
     const CIRCUM = 503;
-    const pct    = Math.min(ratio / 2, 1); // clamp at 2+ → 100%
+    const pct    = Math.min(ratio / 2, 1);
     const offset = CIRCUM * (1 - pct);
 
     fill.setAttribute('stroke-dashoffset', offset);
 
-    // Needle: rotates from -90° (left = 0) to +90° (right = 2+)
-    // Center: (200, 140), angle in SVG: -90 at left, +90 at right
-    const angle = (pct - 0.5) * Math.PI; // -π/2 to +π/2
+    const angle = (pct - 0.5) * Math.PI;
     const needleLen = 90;
     const nx = 200 + needleLen * Math.sin(angle);
     const ny = 140 - needleLen * Math.cos(angle);
@@ -200,7 +205,7 @@ const Calculator = (() => {
 
     section.classList.remove('hidden');
 
-    let html = '<h4>👥 Team Analysis</h4>';
+    let html = '<h4>Team Analysis</h4>';
     teamsWithMembers.forEach(item => {
       html += `<div style="margin-bottom:.75rem">`;
       html += `<strong>${_esc(item.name)}</strong> — team of ${item.teamMembers.length + 1} (you + ${item.teamMembers.length})<br>`;
@@ -212,11 +217,10 @@ const Calculator = (() => {
       });
       html += `</div>`;
 
-      // Tip: in team projects, each member audits each other
       if (item.teamMembers.length > 0) {
         const extraAudits = item.teamMembers.length;
         html += `<p style="font-size:.78rem;color:var(--text2);margin-top:.4rem">
-          💡 With ${item.teamMembers.length} teammate(s), expect ~${extraAudits} extra audit interaction(s).
+          With ${item.teamMembers.length} teammate(s), expect ~${extraAudits} extra audit interaction(s).
           Consider giving each teammate an audit to boost your ratio!
         </p>`;
       }
@@ -226,7 +230,6 @@ const Calculator = (() => {
     section.innerHTML = html;
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────
   function _fmtBytes(n) {
     if (!n) return '0 B';
     if (n >= 1e9) return (n / 1e9).toFixed(2) + ' GB';

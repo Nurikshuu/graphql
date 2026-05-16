@@ -1,16 +1,6 @@
-/**
- * api.js — GraphQL query layer
- *
- * Uses all three required query styles:
- *   1. Normal (no arguments):     getUser, getSkills
- *   2. With arguments (where/order_by): getXPTransactions, getResults, getAuditTransactions
- *   3. Nested (related tables):   getResults (→ object), getProgress (→ object), getObject
- */
-
 const API = (() => {
   const GQL_URL = 'https://01.tomorrow-school.ai/api/graphql-engine/v1/graphql';
 
-  // ── Core fetch ────────────────────────────────────────────────────
   async function query(gql, variables = {}) {
     const token = Auth.getToken();
     if (!token) throw new Error('Not authenticated');
@@ -42,7 +32,7 @@ const API = (() => {
     return result.data;
   }
 
-  // ── 1. NORMAL QUERY — user basic info ─────────────────────────────
+
   async function getUser() {
     const data = await query(`
       {
@@ -60,12 +50,13 @@ const API = (() => {
     return data.user?.[0] ?? null;
   }
 
-  // ── 2. QUERY WITH ARGUMENTS — XP transactions ────────────────────
   async function getXPTransactions() {
     const data = await query(`
       {
         transaction(
-          where: { type: { _eq: "xp" } }
+          where: {
+            type: { _eq: "xp" }
+          }
           order_by: { createdAt: asc }
         ) {
           id
@@ -79,17 +70,14 @@ const API = (() => {
     return data.transaction ?? [];
   }
 
-  // ── 3. NESTED QUERY — results with related object info ───────────
   async function getResults() {
     const data = await query(`
       {
         result(
-          order_by: { createdAt: desc }
-          limit: 200
+          where: { isLast: { _eq: true } }
         ) {
           id
           grade
-          type
           createdAt
           path
           objectId
@@ -103,13 +91,13 @@ const API = (() => {
     return data.result ?? [];
   }
 
-  // ── NORMAL QUERY — skill transactions ────────────────────────────
   async function getSkills() {
     const data = await query(`
       {
         transaction(
           where: { type: { _like: "skill_%" } }
           order_by: { amount: desc }
+          limit: 9999
         ) {
           type
           amount
@@ -120,7 +108,7 @@ const API = (() => {
     return data.transaction ?? [];
   }
 
-  // ── QUERY WITH ARGUMENTS — audit up/down transactions ────────────
+
   async function getAuditTransactions() {
     const data = await query(`
       {
@@ -144,7 +132,6 @@ const API = (() => {
     return data.transaction ?? [];
   }
 
-  // ── NESTED QUERY WITH ARGUMENTS — single object by ID ────────────
   async function getObject(id) {
     const data = await query(
       `
@@ -162,7 +149,6 @@ const API = (() => {
     return data.object?.[0] ?? null;
   }
 
-  // ── NESTED QUERY — progress with object info ─────────────────────
   async function getProgress() {
     const data = await query(`
       {
@@ -186,7 +172,7 @@ const API = (() => {
     return data.progress ?? [];
   }
 
-  // ── Fetch everything needed for the profile in one pass ───────────
+
   async function fetchAll() {
     const [user, xp, results, skills, progress] = await Promise.all([
       getUser(),

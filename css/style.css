@@ -275,6 +275,17 @@ svg { display: block; }
 }
 .btn-logout:hover { border-color: var(--down); color: var(--down); }
 
+.btn-theme-toggle {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  transition: all var(--trans);
+  flex-shrink: 0;
+}
+.btn-theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
 /* ===================================================================
    MAIN CONTENT / LOADER
    =================================================================== */
@@ -358,6 +369,32 @@ svg { display: block; }
   border-radius: 999px; font-size: .78rem; font-weight: 600;
 }
 .badge-campus { background: rgba(124,58,237,.2); color: #a78bfa; border: 1px solid rgba(124,58,237,.4); }
+
+.profile-learning-row {
+  margin-top: .65rem;
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.learn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  background: var(--bg2);
+  border: 1px solid var(--card-border);
+  font-size: .76rem;
+  color: var(--text2);
+}
+.learn-chip-label {
+  color: var(--text2);
+}
+.learn-chip strong {
+  color: var(--accent);
+  font-size: .78rem;
+  font-weight: 700;
+}
 
 .profile-stats-row {
   display: grid; grid-template-columns: repeat(3, 1fr);
@@ -459,6 +496,17 @@ svg { display: block; }
 }
 .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
 .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+.filter-label { font-size: .78rem; color: var(--text3); align-self: center; }
+.filter-select {
+  padding: .3rem .55rem;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  font-size: .78rem; color: var(--text2);
+  background: var(--bg2);
+  cursor: pointer;
+  transition: border-color var(--trans);
+}
+.filter-select:hover, .filter-select:focus { border-color: var(--accent); outline: none; }
 
 .chart-box {
   width: 100%; min-height: 250px;
@@ -692,3 +740,138 @@ select.finput { appearance: none; cursor: pointer; }
   white-space: nowrap;
   transition: opacity var(--trans);
 }
+
+/* ===================================================================
+   MONTHLY MODAL
+   =================================================================== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,15,26,.75);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300;
+}
+.modal-box {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  width: min(520px, 92vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  animation: fadeIn .25s ease;
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.modal-head h3 { font-size: 1.1rem; font-weight: 700; }
+.modal-close {
+  color: var(--text3); font-size: 1.2rem;
+  padding: .2rem .5rem; border-radius: 4px;
+  transition: color var(--trans);
+}
+.modal-close:hover { color: var(--down); }
+.modal-stats { display: flex; gap: 1rem; margin-bottom: 1.25rem; }
+.modal-stat {
+  flex: 1;
+  background: var(--bg2); border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm); padding: .75rem 1rem; text-align: center;
+}
+.modal-stat-lbl { display: block; font-size: .75rem; color: var(--text2); margin-bottom: .3rem; }
+.modal-stat-val { display: block; font-size: 1.3rem; font-weight: 800; }
+.modal-proj-list { display: flex; flex-direction: column; gap: .45rem; }
+.modal-proj-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .55rem .75rem;
+  background: var(--bg2); border-radius: var(--radius-sm);
+  font-size: .875rem;
+}
+.mprow-name { color: var(--text2); }
+.mprow-xp { font-weight: 700; color: var(--up); }
+
+/* ===================================================================
+   CHECKBOX LABEL
+   =================================================================== */
+.checkbox-label {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .83rem; color: var(--text2); cursor: pointer;
+}
+.checkbox-label input[type=checkbox] {
+  accent-color: var(--accent); width: 15px; height: 15px;
+}
+
+/* ===================================================================
+   LIGHT THEME
+   =================================================================== */
+[data-theme="light"] {
+  --bg:         #f8fafc;
+  --bg2:        #f1f5f9;
+  --card:       #ffffff;
+  --card-border:#dde3ea;
+  --accent:     #0077aa;
+  --accent2:    #6d28d9;
+  --up:         #047857;
+  --down:       #b91c1c;
+  --warn:       #b45309;
+  --text:       #1e293b;
+  --text2:      #475569;
+  --text3:      #94a3b8;
+  --shadow:     0 4px 24px rgba(0,0,0,.08);
+  --shadow-glow:0 0 24px rgba(0,119,170,.08);
+  color-scheme: light;
+}
+
+[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-theme="light"] .topbar {
+  background: rgba(255,255,255,.95);
+  border-bottom-color: var(--card-border);
+}
+
+[data-theme="light"] .loader-overlay {
+  background: rgba(248,250,252,.88);
+}
+
+[data-theme="light"] .modal-overlay {
+  background: rgba(100,116,139,.4);
+}
+
+[data-theme="light"] .login-hexgrid {
+  background-image:
+    repeating-linear-gradient(60deg, transparent, transparent 40px, rgba(180,195,210,.4) 40px, rgba(180,195,210,.4) 41px),
+    repeating-linear-gradient(-60deg, transparent, transparent 40px, rgba(180,195,210,.4) 40px, rgba(180,195,210,.4) 41px);
+}
+
+[data-theme="light"] .login-bg {
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(0,119,170,.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 20%, rgba(109,40,217,.06) 0%, transparent 50%);
+}
+
+[data-theme="light"] .nav-btn.active {
+  background: rgba(0,119,170,.1);
+  border-color: rgba(0,119,170,.3);
+}
+
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, var(--accent), #005580);
+  box-shadow: 0 4px 14px rgba(0,119,170,.3);
+}
+[data-theme="light"] .btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(0,119,170,.4);
+}
+
+[data-theme="light"] .xp-big {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track { background: var(--bg2); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--card-border); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--text3); }

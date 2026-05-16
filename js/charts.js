@@ -1,31 +1,22 @@
-/**
- * charts.js — SVG chart generation
- *
- * Charts implemented:
- *  1. drawXPTimeline   — line/area chart (XP cumulative over time)
- *  2. drawXPByProject  — horizontal bar chart (top projects by XP)
- *  3. drawResultsDonut — donut chart (pass vs fail)
- *  4. drawSkillsRadar  — radar/spider chart (skill levels)
- *  5. drawMonthlyXP    — vertical bar chart (XP per month)
- *  6. drawProgressLine — simplified line for advisor projection
- */
-
 const Charts = (() => {
   const NS = 'http://www.w3.org/2000/svg';
-  const COLORS = {
-    accent:  '#00d4ff',
-    accent2: '#7c3aed',
-    up:      '#10b981',
-    down:    '#ef4444',
-    warn:    '#f59e0b',
-    bg2:     '#13162a',
-    border:  '#252845',
-    text:    '#e2e8f0',
-    text2:   '#94a3b8',
-    text3:   '#4a5568',
-  };
+  function getColors() {
+    const s = getComputedStyle(document.documentElement);
+    const c = v => s.getPropertyValue(v).trim();
+    return {
+      accent:  c('--accent'),
+      accent2: c('--accent2'),
+      up:      c('--up'),
+      down:    c('--down'),
+      warn:    c('--warn'),
+      bg2:     c('--bg2'),
+      border:  c('--card-border'),
+      text:    c('--text'),
+      text2:   c('--text2'),
+      text3:   c('--text3'),
+    };
+  }
 
-  // ── Helpers ────────────────────────────────────────────────────────
 
   function el(tag, attrs = {}) {
     const e = document.createElementNS(NS, tag);
@@ -55,6 +46,7 @@ const Charts = (() => {
   }
 
   function emptyMsg(svg, w, h, msg = 'No data yet') {
+    const COLORS = getColors();
     svg.innerHTML = '';
     setSvgSize(svg, w, h);
     svg.appendChild(svgText(w / 2, h / 2, msg, {
@@ -82,10 +74,8 @@ const Charts = (() => {
   }
   function hideTip(tip) { tip.classList.add('hidden'); }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 1. XP TIMELINE  (line + area chart)
-  // ══════════════════════════════════════════════════════════════════
-  function drawXPTimeline(svgEl, transactions, filterDays = 0) {
+  function drawXPTimeline(svgEl, transactions, startDate = null, endDate = null) {
+    const COLORS = getColors();
     const W = 800, H = 300;
     const PAD = { top: 20, right: 40, bottom: 55, left: 75 };
 
@@ -94,29 +84,28 @@ const Charts = (() => {
 
     setSvgSize(svgEl, W, H);
 
-    // Filter & build cumulative series
-    const now = Date.now();
-    let all = transactions.map(t => ({ date: new Date(t.createdAt), amount: t.amount }));
-    if (filterDays > 0) {
-      const cutoff = now - filterDays * 86400000;
-      all = all.filter(p => p.date.getTime() >= cutoff);
+    // All sorted points
+    const sorted = [...transactions].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    // cumulative base before startDate
+    let cumBase = 0;
+    let all = sorted.map(t => ({ date: new Date(t.createdAt), amount: t.amount }));
+    if (startDate) {
+      sorted.forEach(t => { if (new Date(t.createdAt) < startDate) cumBase += t.amount; });
+      all = all.filter(p => p.date >= startDate);
+    }
+    if (endDate) {
+      all = all.filter(p => p.date <= endDate);
     }
     if (!all.length) { emptyMsg(svgEl, W, H, 'No data in this range'); return; }
 
-    // Build cumulative — when filtering, start from base
-    let cumBase = 0;
-    if (filterDays > 0) {
-      // add up XP before the cutoff
-      const cutoff = now - filterDays * 86400000;
-      transactions.forEach(t => { if (new Date(t.createdAt).getTime() < cutoff) cumBase += t.amount; });
-    }
     let cum = cumBase;
     const points = all.map(p => { cum += p.amount; return { date: p.date, xp: cum }; });
 
     const minDate = points[0].date.getTime();
     const maxDate = points[points.length - 1].date.getTime();
     const maxXP   = points[points.length - 1].xp;
-    const minXP   = filterDays > 0 ? cumBase : 0;
+    const minXP   = startDate ? cumBase : 0;
 
     const cw = W - PAD.left - PAD.right;
     const ch = H - PAD.top  - PAD.bottom;
@@ -144,28 +133,23 @@ const Charts = (() => {
     }
     svgEl.appendChild(gridG);
 
-    // Area path
     const linePts = points.map(p => `${sx(p.date)},${sy(p.xp)}`).join(' ');
     const areaD = `M ${sx(points[0].date)},${sy(points[0].xp)} ` +
                   points.slice(1).map(p => `L ${sx(p.date)},${sy(p.xp)}`).join(' ') +
                   ` L ${sx(points[points.length - 1].date)},${PAD.top + ch} L ${sx(points[0].date)},${PAD.top + ch} Z`;
     svgEl.appendChild(el('path', { d: areaD, fill: 'url(#tlGrad)' }));
 
-    // Line path with animation
-    const lineD = `M ${linePts.replace(/ /g, ' L ')}`.replace('M ', 'M ');
     const lineEl = el('path', {
       d: 'M ' + linePts.split(' ').join(' L ').replace(' L ', ' '),
       fill: 'none', stroke: COLORS.accent, 'stroke-width': '2.5', 'stroke-linecap': 'round',
     });
-    // Animated draw
     const len = lineEl.getTotalLength ? lineEl.getTotalLength() : 2000;
     lineEl.style.strokeDasharray  = len;
     lineEl.style.strokeDashoffset = len;
-    lineEl.style.animation = `draw 1.5s ease forwards`;
+    lineEl.style.animation = 'draw 1.5s ease forwards';
     lineEl.style.setProperty('--dash-total', len);
     svgEl.appendChild(lineEl);
 
-    // Data dots + invisible hit targets for tooltip
     const tip = makeTooltip();
     const dotsG = el('g');
     const STEP = Math.max(1, Math.floor(points.length / 60));
@@ -183,28 +167,23 @@ const Charts = (() => {
     });
     svgEl.appendChild(dotsG);
 
-    // X axis labels (dates)
     const axisG = el('g');
-    const dateStep = Math.max(1, Math.floor(points.length / 8));
-    points.forEach((p, i) => {
-      if (i % dateStep !== 0 && i !== points.length - 1) return;
+    [0, points.length - 1].forEach(i => {
+      const p = points[i];
       const x = sx(p.date);
+      const anchor = i === 0 ? 'start' : 'end';
       axisG.appendChild(el('line', { x1: x, x2: x, y1: PAD.top + ch, y2: PAD.top + ch + 4, stroke: COLORS.border, 'stroke-width': '1' }));
-      axisG.appendChild(svgText(x, PAD.top + ch + 16, fmtDate(p.date), { 'text-anchor': 'middle', fill: COLORS.text3, 'font-size': '10', 'font-family': 'system-ui' }));
+      axisG.appendChild(svgText(x, PAD.top + ch + 16, fmtDate(p.date), { 'text-anchor': anchor, fill: COLORS.text3, 'font-size': '11', 'font-family': 'system-ui' }));
     });
-    // Axis lines
     axisG.appendChild(el('line', { x1: PAD.left, x2: W - PAD.right, y1: PAD.top + ch, y2: PAD.top + ch, stroke: COLORS.border, 'stroke-width': '1' }));
     axisG.appendChild(el('line', { x1: PAD.left, x2: PAD.left, y1: PAD.top, y2: PAD.top + ch, stroke: COLORS.border, 'stroke-width': '1' }));
     svgEl.appendChild(axisG);
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 2. XP BY PROJECT  (horizontal bar chart)
-  // ══════════════════════════════════════════════════════════════════
   function drawXPByProject(svgEl, transactions) {
+    const COLORS = getColors();
     const maxBars = 12;
 
-    // Aggregate XP per project path
     const map = {};
     transactions.forEach(t => {
       const name = t.path ? t.path.split('/').pop() : `obj-${t.objectId}`;
@@ -232,18 +211,15 @@ const Charts = (() => {
     bars.forEach(([name, xp], i) => {
       const y = PAD.top + i * (BAR_H + BAR_GAP);
       const w = (xp / maxVal) * bw;
-      const hue = 180 + (i / bars.length) * 60; // cyan → blue gradient per bar
+      const hue = 180 + (i / bars.length) * 60;
 
-      // Background track
       barsG.appendChild(el('rect', { x: PAD.left, y, width: bw, height: BAR_H, rx: '5', fill: COLORS.bg2 }));
 
-      // Filled bar with animation
       const rect = el('rect', { x: PAD.left, y, width: w, height: BAR_H, rx: '5', fill: `hsl(${hue},100%,60%)` });
       rect.style.transformOrigin = `${PAD.left}px ${y + BAR_H / 2}px`;
       rect.style.animation = `barGrow .8s ${i * 0.05}s ease both`;
       barsG.appendChild(rect);
 
-      // Label (left)
       const label = name.length > 18 ? name.slice(0, 16) + '…' : name;
       barsG.appendChild(svgText(PAD.left - 8, y + BAR_H / 2 + 4, label, {
         'text-anchor': 'end', fill: COLORS.text2, 'font-size': '12', 'font-family': 'system-ui',
@@ -265,95 +241,98 @@ const Charts = (() => {
     svgEl.appendChild(barsG);
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 3. RESULTS DONUT  (pass vs fail donut chart)
-  // ══════════════════════════════════════════════════════════════════
   function drawResultsDonut(svgEl, results) {
-    const W = 400, H = 320;
+    const COLORS = getColors();
+    const W = 380, H = 310;
     svgEl.innerHTML = '';
 
     if (!results?.length) { emptyMsg(svgEl, W, H); return; }
     setSvgSize(svgEl, W, H);
 
-    const pass = results.filter(r => r.grade >= 1).length;
-    const fail = results.length - pass;
+    const pass  = results.filter(r => r.grade >= 1).length;
+    const fail  = results.length - pass;
     const total = results.length;
-    if (total === 0) { emptyMsg(svgEl, W, H); return; }
+    if (!total) { emptyMsg(svgEl, W, H); return; }
 
-    const CX = 160, CY = 145, R = 95, SW = 38;
-    const CIRCUM = 2 * Math.PI * R;
-
-    // Draw donut segments using stroke-dasharray trick
+    const CX = W / 2, CY = 130, R = 90, SW = 36;
+    const CIRCUM  = 2 * Math.PI * R;
     const passArc = (pass / total) * CIRCUM;
     const failArc = CIRCUM - passArc;
-
-    // Pass segment
-    const passEl = el('circle', {
-      cx: CX, cy: CY, r: R, fill: 'none',
-      stroke: COLORS.up, 'stroke-width': SW,
-      'stroke-dasharray': `${passArc} ${failArc}`,
-      'stroke-dashoffset': CIRCUM * 0.25, // start at top
-      'stroke-linecap': 'butt',
-    });
-    passEl.style.animation = 'draw 1s ease forwards';
-    passEl.style.setProperty('--dash-total', CIRCUM);
-
-    // Fail segment
-    const failEl = el('circle', {
-      cx: CX, cy: CY, r: R, fill: 'none',
-      stroke: COLORS.down, 'stroke-width': SW,
-      'stroke-dasharray': `${failArc} ${passArc}`,
-      'stroke-dashoffset': CIRCUM * 0.25 - passArc,
-      'stroke-linecap': 'butt',
-    });
+    // dashoffset rotates start point to top of circle
+    const OFFSET = CIRCUM * 0.25;
 
     // Background ring
     svgEl.appendChild(el('circle', { cx: CX, cy: CY, r: R, fill: 'none', stroke: COLORS.border, 'stroke-width': SW }));
-    svgEl.appendChild(failEl);
-    svgEl.appendChild(passEl);
 
-    // Center text
-    svgEl.appendChild(svgText(CX, CY - 8, `${Math.round(pass / total * 100)}%`, {
+    // Pass arc (no animation — dashoffset must stay at OFFSET for correct positioning)
+    svgEl.appendChild(el('circle', {
+      cx: CX, cy: CY, r: R, fill: 'none',
+      stroke: COLORS.up, 'stroke-width': SW,
+      'stroke-dasharray': `${passArc} ${failArc}`,
+      'stroke-dashoffset': OFFSET,
+      'stroke-linecap': 'butt',
+    }));
+
+    if (fail > 0) {
+      svgEl.appendChild(el('circle', {
+        cx: CX, cy: CY, r: R, fill: 'none',
+        stroke: COLORS.down, 'stroke-width': SW,
+        'stroke-dasharray': `${failArc} ${passArc}`,
+        'stroke-dashoffset': OFFSET - passArc,
+        'stroke-linecap': 'butt',
+      }));
+    }
+
+    svgEl.appendChild(svgText(CX, CY - 10, `${Math.round(pass / total * 100)}%`, {
       'text-anchor': 'middle', fill: COLORS.text, 'font-size': '28', 'font-weight': 'bold', 'font-family': 'system-ui',
     }));
     svgEl.appendChild(svgText(CX, CY + 14, 'Pass Rate', {
       'text-anchor': 'middle', fill: COLORS.text2, 'font-size': '12', 'font-family': 'system-ui',
     }));
 
-    // Legend
-    const legendX = 270, ly = 100;
     const lgItems = [
-      { label: `Pass  (${pass})`, color: COLORS.up },
-      { label: `Fail  (${fail})`, color: COLORS.down },
+      { label: `Pass (${pass})`, color: COLORS.up },
+      { label: `Fail (${fail})`, color: COLORS.down },
       { label: `Total (${total})`, color: COLORS.text2 },
     ];
+    const legendY  = CY + R + SW / 2 + 28;
+    const spacing  = W / (lgItems.length + 1);
     lgItems.forEach(({ label, color }, i) => {
-      svgEl.appendChild(el('rect', { x: legendX, y: ly + i * 30, width: 14, height: 14, rx: '3', fill: color }));
-      svgEl.appendChild(svgText(legendX + 20, ly + i * 30 + 11, label, { fill: COLORS.text2, 'font-size': '13', 'font-family': 'system-ui' }));
+      const lx = spacing * (i + 1);
+      svgEl.appendChild(el('rect', { x: lx - 7, y: legendY, width: 14, height: 14, rx: '3', fill: color }));
+      svgEl.appendChild(svgText(lx + 10, legendY + 11, label, { fill: COLORS.text2, 'font-size': '12', 'font-family': 'system-ui' }));
     });
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 4. SKILLS RADAR  (spider / radar chart)
-  // ══════════════════════════════════════════════════════════════════
-  function drawSkillsRadar(svgEl, skills) {
-    const W = 400, H = 350;
+  function drawSkillsRadar(svgEl, skills, skillFilter = null) {
+    const COLORS = getColors();
+    const W = 420, H = 370;
     svgEl.innerHTML = '';
 
     if (!skills?.length) { emptyMsg(svgEl, W, H); return; }
     setSvgSize(svgEl, W, H);
 
-    // Deduplicate: max level per skill type
     const skillMap = {};
+    // API returns skill_back-end, skill_front-end, skill_prog → map to chart axis names
+    const ALIASES = { 'PROG': 'PROG-1', 'BACK-END': 'BACK', 'FRONT-END': 'FRONT' };
     skills.forEach(s => {
-      const name = s.type.replace('skill_', '').toUpperCase();
+      let name = s.type.replace('skill_', '').toUpperCase();
+      name = ALIASES[name] || name;
       skillMap[name] = Math.max(skillMap[name] || 0, s.amount);
     });
-    let entries = Object.entries(skillMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+    let entries;
+    if (skillFilter) {
+      // Show ALL specified axes in the given order; use 0 for missing skills
+      entries = skillFilter.map(name => [name, skillMap[name] || 0]);
+    } else {
+      entries = Object.entries(skillMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    }
+
     if (entries.length < 3) { emptyMsg(svgEl, W, H, 'Not enough skill data'); return; }
 
-    const CX = W / 2, CY = H / 2 - 10;
-    const RADIUS = 110;
+    const CX = W / 2, CY = H / 2 - 5;
+    const RADIUS = 120;
     const n = entries.length;
     const maxVal = Math.max(...entries.map(e => e[1]), 1);
 
@@ -405,19 +384,17 @@ const Charts = (() => {
     // Axis labels
     entries.forEach(([name, val], i) => {
       const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
-      const lx = CX + (RADIUS + 20) * Math.cos(angle);
-      const ly = CY + (RADIUS + 20) * Math.sin(angle);
+      const lx = CX + (RADIUS + 22) * Math.cos(angle);
+      const ly = CY + (RADIUS + 22) * Math.sin(angle);
       const anchor = Math.cos(angle) > 0.1 ? 'start' : Math.cos(angle) < -0.1 ? 'end' : 'middle';
-      const t = el('text', { x: lx, y: ly + 4, 'text-anchor': anchor, fill: COLORS.text2, 'font-size': '11', 'font-family': 'system-ui' });
-      t.textContent = `${name} (${val})`;
+      const t = el('text', { x: lx, y: ly + 4, 'text-anchor': anchor, fill: val > 0 ? COLORS.text2 : COLORS.text3, 'font-size': '11', 'font-family': 'system-ui' });
+      t.textContent = val > 0 ? `${name} (${val})` : name;
       svgEl.appendChild(t);
     });
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 5. MONTHLY XP  (vertical bar chart)
-  // ══════════════════════════════════════════════════════════════════
-  function drawMonthlyXP(svgEl, transactions) {
+  function drawMonthlyXP(svgEl, transactions, onBarClick = null) {
+    const COLORS = getColors();
     const W = 600, H = 280;
     const PAD = { top: 20, right: 20, bottom: 55, left: 65 };
 
@@ -425,20 +402,33 @@ const Charts = (() => {
     if (!transactions?.length) { emptyMsg(svgEl, W, H); return; }
     setSvgSize(svgEl, W, H);
 
-    // Aggregate by YYYY-MM
+    // Build map of actual XP per month
     const monthly = {};
     transactions.forEach(t => {
       const d = new Date(t.createdAt);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       monthly[key] = (monthly[key] || 0) + t.amount;
     });
-    const entries = Object.entries(monthly).sort(([a], [b]) => a.localeCompare(b));
+
+    // Fill every month between first and last (including empties)
+    const keys = Object.keys(monthly).sort();
+    const [fy, fm] = keys[0].split('-').map(Number);
+    const now = new Date();
+    const endYr = now.getFullYear(), endMo = now.getMonth() + 1;
+    const allKeys = [];
+    let cy = fy, cm = fm;
+    while (cy < endYr || (cy === endYr && cm <= endMo)) {
+      allKeys.push(`${cy}-${String(cm).padStart(2, '0')}`);
+      cm++;
+      if (cm > 12) { cm = 1; cy++; }
+    }
+    const entries = allKeys.map(k => [k, monthly[k] || 0]);
     if (!entries.length) { emptyMsg(svgEl, W, H); return; }
 
     const maxVal = Math.max(...entries.map(e => e[1]), 1);
     const cw = W - PAD.left - PAD.right;
     const ch = H - PAD.top - PAD.bottom;
-    const barW = Math.max(8, cw / entries.length - 4);
+    const barW = Math.max(4, cw / entries.length - 2);
 
     const tip = makeTooltip();
 
@@ -456,38 +446,48 @@ const Charts = (() => {
       const barH = (val / maxVal) * ch;
       const y = PAD.top + ch - barH;
 
-      const rect = el('rect', { x, y, width: barW, height: barH, rx: '3', fill: COLORS.accent, opacity: '0.85' });
-      rect.style.transformOrigin = `${x + barW / 2}px ${PAD.top + ch}px`;
-      rect.style.animation = `barGrow .7s ${i * 0.04}s ease both`;
-      g.appendChild(rect);
+      if (val > 0) {
+        const rect = el('rect', { x, y, width: barW, height: barH, rx: '2', fill: COLORS.accent, opacity: '0.85' });
+        rect.style.transformOrigin = `${x + barW / 2}px ${PAD.top + ch}px`;
+        rect.style.animation = `barGrow .7s ${i * 0.02}s ease both`;
+        g.appendChild(rect);
+      }
 
-      // Month label
       const [yr, mo] = key.split('-');
-      const moName = new Date(+yr, +mo - 1).toLocaleString('en', { month: 'short' });
-      g.appendChild(svgText(x + barW / 2, PAD.top + ch + 14, moName, { 'text-anchor': 'middle', fill: COLORS.text3, 'font-size': '10', 'font-family': 'system-ui' }));
-
-      // Year label (only when year changes)
+      // Only show month label if bar is wide enough or every Nth bar
+      const labelStep = Math.max(1, Math.ceil(entries.length / 24));
+      if (i % labelStep === 0) {
+        const moName = new Date(+yr, +mo - 1).toLocaleString('en', { month: 'short' });
+        g.appendChild(svgText(x + barW / 2, PAD.top + ch + 14, moName, { 'text-anchor': 'middle', fill: COLORS.text3, 'font-size': '10', 'font-family': 'system-ui' }));
+      }
       if (i === 0 || key.split('-')[0] !== entries[i - 1][0].split('-')[0]) {
         g.appendChild(svgText(x + barW / 2, PAD.top + ch + 28, yr, { 'text-anchor': 'middle', fill: COLORS.text3, 'font-size': '9', 'font-family': 'system-ui' }));
       }
 
-      // Tooltip hitbox
       const hit = el('rect', { x, y: PAD.top, width: barW, height: ch, fill: 'transparent' });
-      hit.addEventListener('mouseenter', e => showTip(tip, `<strong>${key}</strong><br>${val.toLocaleString()} XP`, e.clientX, e.clientY));
-      hit.addEventListener('mousemove',  e => showTip(tip, `<strong>${key}</strong><br>${val.toLocaleString()} XP`, e.clientX, e.clientY));
+      hit.style.cursor = val > 0 ? 'pointer' : 'default';
+      const tipLabel = val > 0 ? `<strong>${key}</strong><br>${fmt(val)} XP` : `<strong>${key}</strong><br>No XP`;
+      hit.addEventListener('mouseenter', e => showTip(tip, tipLabel, e.clientX, e.clientY));
+      hit.addEventListener('mousemove',  e => showTip(tip, tipLabel, e.clientX, e.clientY));
       hit.addEventListener('mouseleave', () => hideTip(tip));
+      if (onBarClick && val > 0) {
+        hit.addEventListener('click', () => {
+          const monthTxns = transactions.filter(t => {
+            const d = new Date(t.createdAt);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === key;
+          });
+          onBarClick(key, monthTxns);
+        });
+      }
       g.appendChild(hit);
     });
 
-    // Axis
     svgEl.appendChild(el('line', { x1: PAD.left, x2: W - PAD.right, y1: PAD.top + ch, y2: PAD.top + ch, stroke: COLORS.border, 'stroke-width': '1' }));
     svgEl.appendChild(g);
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 6. ADVISOR PROGRESS LINE (simple line chart for forecasting)
-  // ══════════════════════════════════════════════════════════════════
   function drawProgressForecast(svgEl, currentXP, projectedPoints) {
+    const COLORS = getColors();
     const W = 700, H = 200;
     const PAD = { top: 20, right: 30, bottom: 40, left: 75 };
     svgEl.innerHTML = '';
@@ -555,12 +555,12 @@ const Charts = (() => {
 
   // ── Update audit gauge (overview) ─────────────────────────────────
   function updateAuditGauge(svgEl, ratio) {
+    const COLORS = getColors();
     const arc = svgEl.querySelector('#ov-gauge-arc');
     const txt = svgEl.querySelector('#ov-gauge-val');
     if (!arc || !txt) return;
 
-    const CIRCUM = 251; // half-circle perimeter ≈ π × 80
-    // Clamp ratio to [0, 2] for display
+    const CIRCUM = 251;
     const pct = clamp(ratio / 2, 0, 1);
     const offset = CIRCUM * (1 - pct);
 
